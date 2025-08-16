@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import com.ccp.constantes.CcpOtherConstants;
 import com.ccp.decorators.CcpJsonRepresentation;
 import com.ccp.decorators.CcpTimeDecorator;
+import com.ccp.decorators.CcpJsonRepresentation.CcpJsonFieldName;
 import com.ccp.dependency.injection.CcpDependencyInjection;
 import com.ccp.especifications.db.crud.CcpCrud;
 import com.ccp.especifications.db.crud.CcpSelectUnionAll;
@@ -20,7 +21,7 @@ import com.ccp.exceptions.db.crud.CcpErrorDbCrudMultiGetSearchUnfeasible;
 import com.ccp.exceptions.db.utils.CcpErrorBulkEntityRecordNotFound;
 import com.ccp.http.CcpHttpMethods;
 import com.ccp.process.CcpFunctionThrowException;
-enum ElasticSearchCrudConstants{
+enum ElasticSearchCrudConstants  implements CcpJsonFieldName{
 	upsert, params, source, script, lang, painless, _id, _index, docs, result, ElasticSearchHttpStatus
 	
 }

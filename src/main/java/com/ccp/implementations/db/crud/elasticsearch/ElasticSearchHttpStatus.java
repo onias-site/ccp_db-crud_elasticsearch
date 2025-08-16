@@ -3,7 +3,8 @@ package com.ccp.implementations.db.crud.elasticsearch;
 import java.util.function.Function;
 
 import com.ccp.decorators.CcpJsonRepresentation;
-enum ElasticSearchHttpStatusConstants{
+import com.ccp.decorators.CcpJsonRepresentation.CcpJsonFieldName;
+enum ElasticSearchHttpStatusConstants  implements CcpJsonFieldName{
 	ElasticSearchHttpStatus
 }
 enum ElasticSearchHttpStatus implements  Function<CcpJsonRepresentation, CcpJsonRepresentation>{
