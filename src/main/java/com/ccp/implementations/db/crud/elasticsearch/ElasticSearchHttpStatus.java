@@ -4,19 +4,19 @@ import java.util.function.Function;
 
 import com.ccp.decorators.CcpJsonRepresentation;
 import com.ccp.decorators.CcpJsonRepresentation.CcpJsonFieldName;
-enum ElasticSearchHttpStatusConstants  implements CcpJsonFieldName{
-	ElasticSearchHttpStatus
-}
 enum ElasticSearchHttpStatus implements  Function<CcpJsonRepresentation, CcpJsonRepresentation>{
 	OK,
 	NOT_FOUND, 
 	CREATED;
 
+	enum JsonFieldNames implements CcpJsonFieldName{
+		ElasticSearchHttpStatus
+	}
 
 	
 	public CcpJsonRepresentation apply(CcpJsonRepresentation json) {
-//		FIXME se esssa classe "ElasticSearchHttpStatus" mudar de nome haverá uma quebra
-		CcpJsonRepresentation put = json.addJsonTransformer(ElasticSearchHttpStatusConstants.ElasticSearchHttpStatus, this);
+//		ATTENTION se esssa classe "ElasticSearchHttpStatus" mudar de nome haverá uma quebra
+		CcpJsonRepresentation put = json.addJsonTransformer(JsonFieldNames.ElasticSearchHttpStatus, this);
 		return put;
 	}
 	
