@@ -1,14 +1,13 @@
 
 package com.ccp.implementations.db.crud.elasticsearch;
 
-import java.util.function.Function;
-
 import com.ccp.decorators.CcpJsonRepresentation;
 import com.ccp.decorators.CcpJsonRepresentation.CcpJsonFieldName;
 import com.ccp.especifications.db.crud.CcpErrorDbCrudMultiGetSearchFailed;
+import com.ccp.especifications.mensageria.receiver.CcpBusiness;
 
 
-class FunctionResponseHandlerToMget implements Function<CcpJsonRepresentation, CcpJsonRepresentation>{
+class FunctionResponseHandlerToMget implements CcpBusiness{
 	enum JsonFieldNames implements CcpJsonFieldName{
 		error, _source, _index, _id
 	}
