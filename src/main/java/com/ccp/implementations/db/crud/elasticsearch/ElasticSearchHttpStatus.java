@@ -1,10 +1,9 @@
 package com.ccp.implementations.db.crud.elasticsearch;
 
-import java.util.function.Function;
-
 import com.ccp.decorators.CcpJsonRepresentation;
 import com.ccp.decorators.CcpJsonRepresentation.CcpJsonFieldName;
-enum ElasticSearchHttpStatus implements  Function<CcpJsonRepresentation, CcpJsonRepresentation>{
+import com.ccp.especifications.mensageria.receiver.CcpBusiness;
+enum ElasticSearchHttpStatus implements  CcpBusiness{
 	OK,
 	NOT_FOUND, 
 	CREATED;
