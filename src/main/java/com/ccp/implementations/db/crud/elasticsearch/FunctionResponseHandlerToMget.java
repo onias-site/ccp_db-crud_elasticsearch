@@ -4,7 +4,7 @@ package com.ccp.implementations.db.crud.elasticsearch;
 import com.ccp.decorators.CcpJsonRepresentation;
 import com.ccp.decorators.CcpJsonRepresentation.CcpJsonFieldName;
 import com.ccp.especifications.db.crud.CcpErrorDbCrudMultiGetSearchFailed;
-import com.ccp.especifications.mensageria.receiver.CcpBusiness;
+import com.ccp.business.CcpBusiness;
 
 
 class FunctionResponseHandlerToMget implements CcpBusiness{
