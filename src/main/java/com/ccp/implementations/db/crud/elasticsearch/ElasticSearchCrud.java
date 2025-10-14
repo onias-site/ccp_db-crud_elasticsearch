@@ -36,7 +36,7 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 				
  				List<String> primaryKeyNames = entity.getPrimaryKeyNames();
 				
-				boolean anyKeyIsMissing = json.containsAllFields(primaryKeyNames) == false;
+				boolean anyKeyIsMissing = false == json.containsAllFields(primaryKeyNames);
 				
 				if(anyKeyIsMissing) {
 					continue;
@@ -98,7 +98,7 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 		return exists;
 	}
 
-	public CcpJsonRepresentation createOrUpdate(String entityName, CcpJsonRepresentation json, String id) {
+	public CcpJsonRepresentation save(String entityName, CcpJsonRepresentation json, String id) {
 		String path = "/" + entityName + "/_update/" + id;
 		
 		CcpJsonRepresentation requestBody = CcpOtherConstants.EMPTY_JSON
@@ -109,7 +109,7 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 				;
 		
 		CcpJsonRepresentation handlers = CcpOtherConstants.EMPTY_JSON
-				.addJsonTransformer(409, values -> this.retryCreateOrUpdate(entityName, json, id))
+				.addJsonTransformer(409, values -> this.retrySave(entityName, json, id))
 				.addJsonTransformer(201,  ElasticSearchHttpStatus.CREATED)
 				.addJsonTransformer(200, ElasticSearchHttpStatus.OK)
 				;
@@ -119,9 +119,9 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 		return response;
 	}
 
-	private CcpJsonRepresentation retryCreateOrUpdate(String entityName, CcpJsonRepresentation json, String id) {
+	private CcpJsonRepresentation retrySave(String entityName, CcpJsonRepresentation json, String id) {
 		new CcpTimeDecorator().sleep(1000);
-		CcpJsonRepresentation createOrUpdate = this.createOrUpdate(entityName, json, id);
+		CcpJsonRepresentation createOrUpdate = this.save(entityName, json, id);
 		return createOrUpdate;
 	}
 

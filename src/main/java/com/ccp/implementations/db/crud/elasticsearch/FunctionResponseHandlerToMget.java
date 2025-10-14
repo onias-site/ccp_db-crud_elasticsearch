@@ -20,7 +20,7 @@ class FunctionResponseHandlerToMget implements CcpBusiness{
 		
 		CcpJsonRepresentation error = json.getInnerJson(JsonFieldNames.error);
 		
-		boolean hasError = error.isEmpty() == false;
+		boolean hasError = false == error.isEmpty();
 		
 		if(hasError) {
 			throw new CcpErrorDbCrudMultiGetSearchFailed(error);
