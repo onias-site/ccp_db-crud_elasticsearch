@@ -11,13 +11,13 @@ import com.ccp.decorators.CcpJsonRepresentation;
 import com.ccp.decorators.CcpJsonRepresentation.CcpJsonFieldName;
 import com.ccp.decorators.CcpTimeDecorator;
 import com.ccp.dependency.injection.CcpDependencyInjection;
+import com.ccp.especifications.db.bulk.CcpErrorBulkEntityRecordNotFound;
 import com.ccp.especifications.db.crud.CcpCrud;
-import com.ccp.especifications.db.crud.CcpErrorDbCrudMultiGetSearchUnfeasible;
+import com.ccp.especifications.db.crud.CcpErrorCrudMultiGetSearchUnfeasible;
 import com.ccp.especifications.db.crud.CcpSelectUnionAll;
 import com.ccp.especifications.db.crud.CcpUnionAllExecutor;
 import com.ccp.especifications.db.utils.CcpDbRequester;
-import com.ccp.especifications.db.utils.CcpEntity;
-import com.ccp.especifications.db.utils.CcpErrorBulkEntityRecordNotFound;
+import com.ccp.especifications.db.utils.entity.CcpEntity;
 import com.ccp.especifications.http.CcpHttpMethods;
 import com.ccp.especifications.http.CcpHttpResponseType;
 import com.ccp.process.CcpFunctionThrowException;
@@ -50,7 +50,7 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 		boolean unfeasibleMultiGetSearch = docs.isEmpty();
 	
 		if(unfeasibleMultiGetSearch) {
-			throw new CcpErrorDbCrudMultiGetSearchUnfeasible(jsons, entities);
+			throw new CcpErrorCrudMultiGetSearchUnfeasible(jsons, entities);
 		}
 		
 		CcpJsonRepresentation requestBody = CcpOtherConstants.EMPTY_JSON.put(JsonFieldNames.docs, docs);

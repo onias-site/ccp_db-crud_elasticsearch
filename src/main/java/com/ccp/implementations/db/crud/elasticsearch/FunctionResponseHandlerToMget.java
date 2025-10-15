@@ -3,7 +3,7 @@ package com.ccp.implementations.db.crud.elasticsearch;
 
 import com.ccp.decorators.CcpJsonRepresentation;
 import com.ccp.decorators.CcpJsonRepresentation.CcpJsonFieldName;
-import com.ccp.especifications.db.crud.CcpErrorDbCrudMultiGetSearchFailed;
+import com.ccp.especifications.db.crud.CcpErrorCrudMultiGetSearchFailed;
 import com.ccp.business.CcpBusiness;
 
 
@@ -23,7 +23,7 @@ class FunctionResponseHandlerToMget implements CcpBusiness{
 		boolean hasError = false == error.isEmpty();
 		
 		if(hasError) {
-			throw new CcpErrorDbCrudMultiGetSearchFailed(error);
+			throw new CcpErrorCrudMultiGetSearchFailed(error);
 		}
 
 		CcpJsonRepresentation internalMap = json.getInnerJson(JsonFieldNames._source);
