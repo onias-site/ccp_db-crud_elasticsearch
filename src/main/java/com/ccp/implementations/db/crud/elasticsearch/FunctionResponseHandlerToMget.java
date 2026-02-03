@@ -3,7 +3,6 @@ package com.ccp.implementations.db.crud.elasticsearch;
 
 import com.ccp.decorators.CcpJsonRepresentation;
 import com.ccp.decorators.CcpJsonRepresentation.CcpJsonFieldName;
-import com.ccp.decorators.CcpJsonRepresentation;
 import com.ccp.especifications.db.crud.CcpErrorCrudMultiGetSearchFailed;
 import com.ccp.business.CcpBusiness;
 
