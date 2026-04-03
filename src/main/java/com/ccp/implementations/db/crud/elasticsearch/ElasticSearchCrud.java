@@ -92,7 +92,6 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 		
 		CcpDbRequester dbUtils = CcpDependencyInjection.getDependency(CcpDbRequester.class);
 		CcpJsonRepresentation response = dbUtils.executeHttpRequest("exists", path, CcpHttpMethods.HEAD, flows, CcpOtherConstants.EMPTY_JSON, CcpHttpResponseType.singleRecord);
-//		ATTENTION se esssa classe "ElasticSearchHttpStatus" mudar de nome haverá uma quebra
 		ElasticSearchHttpStatus status = response.getAsObject(JsonFieldNames.ElasticSearchHttpStatus);
 		
 		boolean exists = ElasticSearchHttpStatus.OK.equals(status);

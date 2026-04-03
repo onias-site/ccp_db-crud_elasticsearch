@@ -14,7 +14,6 @@ enum ElasticSearchHttpStatus implements  CcpBusiness{
 
 	
 	public CcpJsonRepresentation apply(CcpJsonRepresentation json) {
-//		ATTENTION se esssa classe "ElasticSearchHttpStatus" mudar de nome haverá uma quebra
 		CcpJsonRepresentation put = json.addJsonTransformer(JsonFieldNames.ElasticSearchHttpStatus, this);
 		return put;
 	}
