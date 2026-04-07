@@ -53,10 +53,10 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 		if(unfeasibleMultiGetSearch) {
 			throw new CcpErrorCrudMultiGetSearchUnfeasible(jsons, entities);
 		}
-		
 		CcpJsonRepresentation requestBody = CcpOtherConstants.EMPTY_JSON.put(JsonFieldNames.docs, docs);
 		return requestBody;
 	}
+	
 	
 	public CcpJsonRepresentation getRequestBodyToMultipleGet(Set<String> ids, CcpEntity... entities) {
 		List<CcpJsonRepresentation> docs1 = new ArrayList<CcpJsonRepresentation>();
@@ -140,6 +140,7 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 		CcpSelectUnionAll ccpSelectUnionAll = this.unionAll(requestBody);
 		return ccpSelectUnionAll;
 	}
+
 
 	private CcpSelectUnionAll unionAll(CcpJsonRepresentation requestBody) {
 		CcpDbRequester dbUtils = CcpDependencyInjection.getDependency(CcpDbRequester.class);
