@@ -12,7 +12,7 @@ class FunctionResponseHandlerToMget implements CcpBusiness{
 		error, _source, _index, _id
 	}
 	
-	static FunctionResponseHandlerToMget INSTANCE = new FunctionResponseHandlerToMget();
+	static final FunctionResponseHandlerToMget INSTANCE = new FunctionResponseHandlerToMget();
 	
 	private FunctionResponseHandlerToMget() {}
 

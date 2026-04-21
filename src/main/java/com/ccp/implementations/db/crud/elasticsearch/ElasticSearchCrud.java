@@ -43,7 +43,8 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 					continue;
 				}
 
-				List<CcpJsonRepresentation> parametersToSearch = entity.getParametersToSearch(json);
+				List<CcpJsonRepresentation> parametersToSearch = entity.getParametersToSearch(json)
+						;
 				docs.addAll(parametersToSearch);
 			}
 		}
@@ -137,17 +138,17 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 	
 	public CcpSelectUnionAll unionAll(Collection<CcpJsonRepresentation> values, CcpEntity... entities) {
 		CcpJsonRepresentation requestBody = this.getRequestBodyToMultipleGet(values, entities);
-		CcpSelectUnionAll ccpSelectUnionAll = this.unionAll(requestBody);
+		CcpSelectUnionAll ccpSelectUnionAll = this.unionAll(requestBody, entities);
 		return ccpSelectUnionAll;
 	}
 
 
-	private CcpSelectUnionAll unionAll(CcpJsonRepresentation requestBody) {
+	private CcpSelectUnionAll unionAll(CcpJsonRepresentation requestBody, CcpEntity... entities) {
 		CcpDbRequester dbUtils = CcpDependencyInjection.getDependency(CcpDbRequester.class);
 		CcpJsonRepresentation response = dbUtils.executeHttpRequest("getResponseToMultipleGet", "/_mget", CcpHttpMethods.POST, 200, requestBody, CcpHttpResponseType.singleRecord);
 		List<CcpJsonRepresentation> docs = response.getAsJsonList(JsonFieldNames.docs);
 		List<CcpJsonRepresentation> asMapList = docs.stream().map(FunctionResponseHandlerToMget.INSTANCE).collect(Collectors.toList());
-		CcpSelectUnionAll ccpSelectUnionAll = new CcpSelectUnionAll(asMapList);
+		CcpSelectUnionAll ccpSelectUnionAll = new CcpSelectUnionAll(asMapList, entities);
 		return ccpSelectUnionAll;
 	}
 
