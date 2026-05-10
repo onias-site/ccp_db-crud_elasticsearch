@@ -18,7 +18,7 @@ import com.ccp.especifications.db.crud.CcpSelectUnionAll;
 import com.ccp.especifications.db.crud.CcpUnionAllExecutor;
 import com.ccp.especifications.db.utils.CcpDbRequester;
 import com.ccp.especifications.db.utils.entity.CcpEntity;
-import com.ccp.especifications.db.utils.entity.decorators.engine.CcpEntityDetails;
+import com.ccp.especifications.db.utils.entity.decorators.engine.CcpEntityMetaData;
 import com.ccp.especifications.http.CcpHttpMethods;
 import com.ccp.especifications.http.CcpHttpResponseType;
 import com.ccp.process.CcpFunctionThrowException;
@@ -35,7 +35,7 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 			
 			for (CcpJsonRepresentation json : jsons) {
 				
- 				CcpEntityDetails entityDetails = entity.getEntityDetails();
+ 				CcpEntityMetaData entityDetails = entity.getEntityMetaData();
 				
 				boolean anyKeyIsMissing = false == json.containsAllFields(entityDetails.primaryKeyNames);
 				
@@ -62,7 +62,7 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 	public CcpJsonRepresentation getRequestBodyToMultipleGet(Set<String> ids, CcpEntity... entities) {
 		List<CcpJsonRepresentation> docs1 = new ArrayList<CcpJsonRepresentation>();
 		for (CcpEntity entity : entities) {
-			CcpEntityDetails entityDetails = entity.getEntityDetails();
+			CcpEntityMetaData entityDetails = entity.getEntityMetaData();
 			for (String id : ids) {
 				CcpJsonRepresentation put = CcpOtherConstants.EMPTY_JSON
 				.put(JsonFieldNames._index, entityDetails.entityName)
