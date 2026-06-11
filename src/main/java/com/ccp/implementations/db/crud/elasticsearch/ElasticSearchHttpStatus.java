@@ -3,7 +3,7 @@ package com.ccp.implementations.db.crud.elasticsearch;
 import com.ccp.decorators.CcpJsonRepresentation;
 import com.ccp.decorators.CcpJsonRepresentation.CcpJsonFieldName;
 import com.ccp.business.CcpBusiness;
-enum ElasticSearchHttpStatus implements  CcpBusiness{
+enum ElasticSearchHttpStatus implements CcpBusiness{
 	OK,
 	NOT_FOUND, 
 	CREATED;
