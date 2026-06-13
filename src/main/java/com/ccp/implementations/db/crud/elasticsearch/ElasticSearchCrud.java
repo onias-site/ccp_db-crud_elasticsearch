@@ -22,6 +22,11 @@ import com.ccp.especifications.db.utils.entity.decorators.engine.CcpEntityMetaDa
 import com.ccp.especifications.http.CcpHttpMethods;
 import com.ccp.especifications.http.CcpHttpResponseType;
 import com.ccp.process.CcpFunctionThrowException;
+/**
+ * Implementação principal de {@code CcpCrud} e {@code CcpUnionAllExecutor} para o Elasticsearch.
+ * Oferece operações de leitura ({@code getOneById}, {@code exists}, {@code unionAll}),
+ * escrita ({@code save} com upsert via script Painless) e remoção ({@code delete}).
+ */
 class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 	enum JsonFieldNames implements CcpJsonFieldName{
 		upsert, params, source, script, lang, painless, _id, _index, docs, result, ElasticSearchHttpStatus

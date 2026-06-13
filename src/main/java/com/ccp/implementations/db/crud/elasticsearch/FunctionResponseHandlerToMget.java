@@ -7,6 +7,11 @@ import com.ccp.especifications.db.crud.CcpErrorCrudMultiGetSearchFailed;
 import com.ccp.business.CcpBusiness;
 
 
+/**
+ * Singleton {@code CcpBusiness} que processa cada documento retornado pelo {@code _mget}.
+ * Extrai o campo {@code _source} e re-adiciona {@code _id} e {@code _index} ao JSON resultante.
+ * Lança {@code CcpErrorCrudMultiGetSearchFailed} se o documento contiver campo {@code error}.
+ */
 class FunctionResponseHandlerToMget implements CcpBusiness{
 	enum JsonFieldNames implements CcpJsonFieldName{
 		error, _source, _index, _id
