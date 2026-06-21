@@ -2,6 +2,7 @@
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -14,7 +15,7 @@ import com.ccp.dependency.injection.CcpDependencyInjection;
 import com.ccp.especifications.db.bulk.CcpErrorBulkEntityRecordNotFound;
 import com.ccp.especifications.db.crud.CcpCrud;
 import com.ccp.especifications.db.crud.CcpGetEntityId.CcpErrorCrudMultiGetSearchUnfeasible;
-import com.ccp.especifications.db.crud.CcpGetEntityId.CcpSelectUnionAll;
+import com.ccp.especifications.db.crud.CcpSelectUnionAll;
 import com.ccp.especifications.db.crud.CcpUnionAllExecutor;
 import com.ccp.especifications.db.utils.CcpDbRequester;
 import com.ccp.especifications.db.utils.entity.CcpEntity;
@@ -34,7 +35,7 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 
 	private CcpJsonRepresentation getRequestBodyToMultipleGet(Collection<CcpJsonRepresentation> jsons, CcpEntity... entities) {
 		
-		List<CcpJsonRepresentation> docs = new ArrayList<CcpJsonRepresentation>();
+		Set<CcpJsonRepresentation> docs = new LinkedHashSet<CcpJsonRepresentation>();
 		
 		for (CcpEntity entity : entities) {
 			
