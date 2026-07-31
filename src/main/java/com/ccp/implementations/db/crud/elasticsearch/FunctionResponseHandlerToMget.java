@@ -1,4 +1,4 @@
-﻿
+
 package com.ccp.implementations.db.crud.elasticsearch;
 
 import com.ccp.decorators.CcpJsonRepresentation;

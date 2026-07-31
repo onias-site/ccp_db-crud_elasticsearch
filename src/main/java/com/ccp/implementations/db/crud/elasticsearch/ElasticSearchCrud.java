@@ -1,4 +1,4 @@
-﻿package com.ccp.implementations.db.crud.elasticsearch;
+package com.ccp.implementations.db.crud.elasticsearch;
 
 import java.util.ArrayList;
 import java.util.Collection;
