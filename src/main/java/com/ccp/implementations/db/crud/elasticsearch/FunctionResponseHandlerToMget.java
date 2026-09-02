@@ -2,8 +2,8 @@
 package com.ccp.implementations.db.crud.elasticsearch;
 
 import com.ccp.decorators.CcpJsonRepresentation;
-import com.ccp.decorators.CcpJsonRepresentation.CcpJsonFieldName;
-import com.ccp.especifications.db.crud.CcpGetEntityId.CcpErrorCrudMultiGetSearchFailed;
+import com.ccp.decorators.CcpJsonFieldName;
+import com.ccp.especifications.db.crud.CcpErrorCrudMultiGetSearchFailed;
 import com.ccp.business.CcpBusiness;
 
 
@@ -24,20 +24,23 @@ class FunctionResponseHandlerToMget implements CcpBusiness{
 	public CcpJsonRepresentation apply(CcpJsonRepresentation json) {
 		
 		CcpJsonRepresentation error = json.getInnerJson(JsonFieldNames.error);
-		
-		boolean hasError = false == error.isEmpty();
+		boolean errorEmpty = error.isEmpty();
+
+		boolean hasError = false == errorEmpty;
 		
 		if(hasError) {
-			throw new CcpErrorCrudMultiGetSearchFailed(error);
+			CcpErrorCrudMultiGetSearchFailed ccpErrorCrudMultiGetSearchFailed = new CcpErrorCrudMultiGetSearchFailed(error);
+			throw ccpErrorCrudMultiGetSearchFailed;
 		}
 
 		CcpJsonRepresentation internalMap = json.getInnerJson(JsonFieldNames._source);
 		
 		String _index = json.getAsString(JsonFieldNames._index);
 		String id = json.getAsString(JsonFieldNames._id);
+		CcpJsonRepresentation put2 = internalMap
+				.put(JsonFieldNames._id, id);
 
-		CcpJsonRepresentation put = internalMap
-				.put(JsonFieldNames._id, id)
+				CcpJsonRepresentation put = put2
 				.put(JsonFieldNames._index, _index)
 				;
 		

@@ -1,7 +1,7 @@
 package com.ccp.implementations.db.crud.elasticsearch;
 
 import com.ccp.decorators.CcpJsonRepresentation;
-import com.ccp.decorators.CcpJsonRepresentation.CcpJsonFieldName;
+import com.ccp.decorators.CcpJsonFieldName;
 import com.ccp.business.CcpBusiness;
 /**
  * Enum que representa os status HTTP relevantes para operações no Elasticsearch.

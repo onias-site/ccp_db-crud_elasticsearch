@@ -10,7 +10,8 @@ public class CcpElasticSearchCrud implements CcpInstanceProvider<CcpCrud>  {
 
 
 	public CcpCrud getInstance() {
-		return new ElasticSearchCrud();
+		ElasticSearchCrud elasticSearchCrud = new ElasticSearchCrud();
+		return elasticSearchCrud;
 	}
 
 }

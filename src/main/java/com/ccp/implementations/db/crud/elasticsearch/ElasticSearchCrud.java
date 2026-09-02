@@ -9,12 +9,12 @@ import java.util.stream.Collectors;
 
 import com.ccp.constants.CcpOtherConstants;
 import com.ccp.decorators.CcpJsonRepresentation;
-import com.ccp.decorators.CcpJsonRepresentation.CcpJsonFieldName;
+import com.ccp.decorators.CcpJsonFieldName;
 import com.ccp.decorators.CcpTimeDecorator;
 import com.ccp.dependency.injection.CcpDependencyInjection;
 import com.ccp.especifications.db.bulk.CcpErrorBulkEntityRecordNotFound;
 import com.ccp.especifications.db.crud.CcpCrud;
-import com.ccp.especifications.db.crud.CcpGetEntityId.CcpErrorCrudMultiGetSearchUnfeasible;
+import com.ccp.especifications.db.crud.CcpErrorCrudMultiGetSearchUnfeasible;
 import com.ccp.especifications.db.crud.CcpSelectUnionAll;
 import com.ccp.especifications.db.crud.CcpUnionAllExecutor;
 import com.ccp.especifications.db.utils.CcpDbRequester;
@@ -23,11 +23,12 @@ import com.ccp.especifications.db.utils.entity.decorators.engine.CcpEntityMetaDa
 import com.ccp.especifications.http.CcpHttpMethods;
 import com.ccp.especifications.http.CcpHttpResponseType;
 import com.ccp.process.CcpFunctionThrowException;
-/**
+import java.util.stream.Stream;/**
  * Implementação principal de {@code CcpCrud} e {@code CcpUnionAllExecutor} para o Elasticsearch.
  * Oferece operações de leitura ({@code getOneById}, {@code exists}, {@code unionAll}),
  * escrita ({@code save} com upsert via script Painless) e remoção ({@code delete}).
  */
+
 class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 	enum JsonFieldNames implements CcpJsonFieldName{
 		upsert, params, source, script, lang, painless, _id, _index, docs, result, ElasticSearchHttpStatus
@@ -42,8 +43,9 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 			for (CcpJsonRepresentation json : jsons) {
 				
  				CcpEntityMetaData entityDetails = entity.getEntityMetaData();
-				
-				boolean anyKeyIsMissing = false == json.containsAllFields(entityDetails.primaryKeyNames);
+					boolean containsAllFields = json.containsAllFields(entityDetails.primaryKeyNames);
+
+					boolean anyKeyIsMissing = false == containsAllFields;
 				
 				if(anyKeyIsMissing) {
 					continue;
@@ -58,7 +60,8 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 		boolean unfeasibleMultiGetSearch = docs.isEmpty();
 	
 		if(unfeasibleMultiGetSearch) {
-			throw new CcpErrorCrudMultiGetSearchUnfeasible(jsons, entities);
+			CcpErrorCrudMultiGetSearchUnfeasible ccpErrorCrudMultiGetSearchUnfeasible = new CcpErrorCrudMultiGetSearchUnfeasible(jsons, entities);
+			throw ccpErrorCrudMultiGetSearchUnfeasible;
 		}
 		CcpJsonRepresentation requestBody = CcpOtherConstants.EMPTY_JSON.put(JsonFieldNames.docs, docs);
 		return requestBody;
@@ -70,8 +73,9 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 		for (CcpEntity entity : entities) {
 			CcpEntityMetaData entityDetails = entity.getEntityMetaData();
 			for (String id : ids) {
-				CcpJsonRepresentation put = CcpOtherConstants.EMPTY_JSON
-				.put(JsonFieldNames._index, entityDetails.entityName)
+				CcpJsonRepresentation put2 = CcpOtherConstants.EMPTY_JSON
+				.put(JsonFieldNames._index, entityDetails.entityName);
+				CcpJsonRepresentation put = put2
 				.put(JsonFieldNames._id, id)
 				;
 				docs1.add(put);
@@ -82,8 +86,13 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 	}
 	
 	public CcpJsonRepresentation getOneById(String entityName, String id) {
-		String path = "/" + entityName + "/_source/" + id ;
-		CcpJsonRepresentation handlers = CcpOtherConstants.EMPTY_JSON.addJsonTransformer(200, CcpOtherConstants.DO_NOTHING).addJsonTransformer(404, new CcpFunctionThrowException(new CcpErrorBulkEntityRecordNotFound(entityName, id)));
+		String valorMais = "/" + entityName;
+		String valorMaisMais = valorMais + "/_source/";
+		String path = valorMaisMais + id ;
+		CcpJsonRepresentation addJsonTransformer = CcpOtherConstants.EMPTY_JSON.addJsonTransformer(200, CcpOtherConstants.DO_NOTHING);
+		CcpErrorBulkEntityRecordNotFound ccpErrorBulkEntityRecordNotFound = new CcpErrorBulkEntityRecordNotFound(entityName, id);
+		CcpFunctionThrowException ccpFunctionThrowException = new CcpFunctionThrowException(ccpErrorBulkEntityRecordNotFound);
+		CcpJsonRepresentation handlers = addJsonTransformer.addJsonTransformer(404, ccpFunctionThrowException);
 		
 		CcpDbRequester dbUtils = CcpDependencyInjection.getDependency(CcpDbRequester.class);
 		CcpJsonRepresentation response = dbUtils.executeHttpRequest("getOneById", path, CcpHttpMethods.GET, handlers, CcpOtherConstants.EMPTY_JSON, CcpHttpResponseType.singleRecord);
@@ -92,9 +101,12 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 	}
 
 	public boolean exists(String entityName, String id) {
-		String path = "/" + entityName + "/_doc/" + id;
-		
-		CcpJsonRepresentation flows = CcpOtherConstants.EMPTY_JSON.addJsonTransformer(200, ElasticSearchHttpStatus.OK)
+		String valorMais2 = "/" + entityName;
+		String valorMais2Mais = valorMais2 + "/_doc/";
+		String path = valorMais2Mais + id;
+		CcpJsonRepresentation addJsonTransformer2 = CcpOtherConstants.EMPTY_JSON.addJsonTransformer(200, ElasticSearchHttpStatus.OK);
+	
+		CcpJsonRepresentation flows = addJsonTransformer2
 				.addJsonTransformer(404,  ElasticSearchHttpStatus.NOT_FOUND);
 		
 		CcpDbRequester dbUtils = CcpDependencyInjection.getDependency(CcpDbRequester.class);
@@ -106,18 +118,26 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 	}
 
 	public CcpJsonRepresentation save(String entityName, CcpJsonRepresentation json, String id) {
-		String path = "/" + entityName + "/_update/" + id;
-		
-		CcpJsonRepresentation requestBody = CcpOtherConstants.EMPTY_JSON
-				.addToItem(JsonFieldNames.script, JsonFieldNames.lang, JsonFieldNames.painless.name())
-				.addToItem(JsonFieldNames.script, JsonFieldNames.source, "ctx._source.putAll(params);")
-				.addToItem(JsonFieldNames.script, JsonFieldNames.params, json)
+		String valorMais3 = "/" + entityName;
+		String valorMais3Mais = valorMais3 + "/_update/";
+		String path = valorMais3Mais + id;
+		String painlessName = JsonFieldNames.painless.name();
+		CcpJsonRepresentation addToItem = CcpOtherConstants.EMPTY_JSON
+				.addToItem(JsonFieldNames.script, JsonFieldNames.lang, painlessName);
+				CcpJsonRepresentation addToItem2 = addToItem
+				.addToItem(JsonFieldNames.script, JsonFieldNames.source, "ctx._source.putAll(params);");
+				CcpJsonRepresentation addToItem3 = addToItem2
+				.addToItem(JsonFieldNames.script, JsonFieldNames.params, json);
+
+				CcpJsonRepresentation requestBody = addToItem3
 				.put(JsonFieldNames.upsert, json)
 				;
-		
-		CcpJsonRepresentation handlers = CcpOtherConstants.EMPTY_JSON
-				.addJsonTransformer(409, values -> this.retrySave(entityName, json, id))
-				.addJsonTransformer(201,  ElasticSearchHttpStatus.CREATED)
+				CcpJsonRepresentation addJsonTransformer3 = CcpOtherConstants.EMPTY_JSON
+				.addJsonTransformer(409, values -> this.retrySave(entityName, json, id));
+				CcpJsonRepresentation addJsonTransformer4 = addJsonTransformer3
+				.addJsonTransformer(201,  ElasticSearchHttpStatus.CREATED);
+
+				CcpJsonRepresentation handlers = addJsonTransformer4
 				.addJsonTransformer(200, ElasticSearchHttpStatus.OK)
 				;
 		
@@ -127,14 +147,18 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 	}
 
 	private CcpJsonRepresentation retrySave(String entityName, CcpJsonRepresentation json, String id) {
-		new CcpTimeDecorator().sleep(1000);
+		CcpTimeDecorator ccpTimeDecorator = new CcpTimeDecorator();
+		ccpTimeDecorator.sleep(1000);
 		CcpJsonRepresentation createOrUpdate = this.save(entityName, json, id);
 		return createOrUpdate;
 	}
 
 	public boolean delete(String entityName, String id) {
-		String path = "/" + entityName + "/_doc/" + id;
-		CcpJsonRepresentation handlers = CcpOtherConstants.EMPTY_JSON.addJsonTransformer(200, CcpOtherConstants.DO_NOTHING).addJsonTransformer(404, CcpOtherConstants.DO_NOTHING);
+		String valorMais4 = "/" + entityName;
+		String valorMais4Mais = valorMais4 + "/_doc/";
+		String path = valorMais4Mais + id;
+		CcpJsonRepresentation addJsonTransformer5 = CcpOtherConstants.EMPTY_JSON.addJsonTransformer(200, CcpOtherConstants.DO_NOTHING);
+		CcpJsonRepresentation handlers = addJsonTransformer5.addJsonTransformer(404, CcpOtherConstants.DO_NOTHING);
 		CcpDbRequester dbUtils = CcpDependencyInjection.getDependency(CcpDbRequester.class);
 		CcpJsonRepresentation response = dbUtils.executeHttpRequest("delete", path, CcpHttpMethods.DELETE, handlers, CcpOtherConstants.EMPTY_JSON, CcpHttpResponseType.singleRecord);
 		String result = response.getAsString(JsonFieldNames.result);
@@ -144,7 +168,8 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 	
 	public CcpSelectUnionAll unionAll(Collection<CcpJsonRepresentation> values, CcpEntity... entities) {
 		CcpJsonRepresentation requestBody = this.getRequestBodyToMultipleGet(values, entities);
-		CcpJsonRepresentation[] searchParameters = values.toArray(new CcpJsonRepresentation[values.size()]);
+		int valuesSize = values.size();
+		CcpJsonRepresentation[] searchParameters = values.toArray(new CcpJsonRepresentation[valuesSize]);
 		CcpSelectUnionAll ccpSelectUnionAll = this.unionAll(requestBody, searchParameters, entities);
 		return ccpSelectUnionAll;   
 	}
@@ -154,7 +179,9 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 		CcpDbRequester dbUtils = CcpDependencyInjection.getDependency(CcpDbRequester.class);
 		CcpJsonRepresentation response = dbUtils.executeHttpRequest("getResponseToMultipleGet", "/_mget", CcpHttpMethods.POST, 200, requestBody, CcpHttpResponseType.singleRecord);
 		List<CcpJsonRepresentation> docs = response.getAsJsonList(JsonFieldNames.docs);
-		List<CcpJsonRepresentation> asMapList = docs.stream().map(FunctionResponseHandlerToMget.INSTANCE).collect(Collectors.toList());
+		Stream<CcpJsonRepresentation> stream = docs.stream();
+		var streamMap = stream.map(FunctionResponseHandlerToMget.INSTANCE);
+		List<CcpJsonRepresentation> asMapList = streamMap.collect(Collectors.toList());
 		CcpSelectUnionAll ccpSelectUnionAll = new CcpSelectUnionAll(searchParameters, asMapList, entities);
 		return ccpSelectUnionAll;
 	}
