@@ -146,6 +146,49 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 		return response;
 	}
 
+	/**
+	 * Interpreta a resposta do {@code _update} do Elasticsearch para distinguir uma inclusão de uma
+	 * atualização. São consultados os dois sinais que a resposta carrega, nesta ordem:
+	 * <ul>
+	 * <li>o campo {@code result} do corpo, que traz o desfecho no nível do documento: {@code created}
+	 * quando o {@code upsert} inseriu o documento, {@code updated} quando o script alterou um documento
+	 * já existente e {@code noop} quando o documento já estava com o conteúdo enviado;</li>
+	 * <li>o status HTTP, registrado no json pelos handlers de {@code save} ({@code 201} vira
+	 * {@code CREATED} na inclusão e {@code 200} vira {@code OK} na atualização), usado quando o corpo
+	 * não trouxe o desfecho. Qualquer outro status não mapeado nem chega aqui, pois o
+	 * {@code CcpHttpHandler} lança {@code CcpErrorHttp} antes.</li>
+	 * </ul>
+	 */
+	public boolean isInsertedDocument(CcpJsonRepresentation saveResponse) {
+
+		String result = saveResponse.getAsString(JsonFieldNames.result);
+
+		boolean bodySaysItWasInserted = "created".equals(result);
+
+		if(bodySaysItWasInserted) {
+			return true;
+		}
+
+		boolean bodySaysItWasUpdated = "updated".equals(result);
+		boolean bodySaysItWasUnchanged = "noop".equals(result);
+		boolean bodyKnowsTheOutcome = bodySaysItWasUpdated || bodySaysItWasUnchanged;
+
+		if(bodyKnowsTheOutcome) {
+			return false;
+		}
+
+		boolean statusIsMissing = false == saveResponse.containsField(JsonFieldNames.ElasticSearchHttpStatus);
+
+		if(statusIsMissing) {
+			return false;
+		}
+
+		ElasticSearchHttpStatus status = saveResponse.getAsObject(JsonFieldNames.ElasticSearchHttpStatus);
+
+		boolean statusSaysItWasInserted = ElasticSearchHttpStatus.CREATED.equals(status);
+		return statusSaysItWasInserted;
+	}
+
 	private CcpJsonRepresentation retrySave(String entityName, CcpJsonRepresentation json, String id) {
 		CcpTimeDecorator ccpTimeDecorator = new CcpTimeDecorator();
 		ccpTimeDecorator.sleep(1000);
@@ -153,6 +196,11 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 		return createOrUpdate;
 	}
 
+	/**
+	 * Remove o documento e informa se ele existia. Tanto o status {@code 200} quanto o {@code 404} são
+	 * tratados como respostas válidas, e é o campo {@code result} do corpo que distingue os dois casos:
+	 * {@code deleted} quando o documento existia e foi removido e {@code not_found} quando ele nem existia.
+	 */
 	public boolean delete(String entityName, String id) {
 		String valorMais4 = "/" + entityName;
 		String valorMais4Mais = valorMais4 + "/_doc/";
