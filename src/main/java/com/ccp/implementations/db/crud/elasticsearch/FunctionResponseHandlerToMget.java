@@ -2,10 +2,11 @@
 package com.ccp.implementations.db.crud.elasticsearch;
 
 import com.ccp.decorators.CcpJsonRepresentation;
-import com.ccp.decorators.CcpJsonFieldName;
 import com.ccp.especifications.db.crud.CcpErrorCrudMultiGetSearchFailed;
 import com.ccp.business.CcpBusiness;
 
+
+import com.ccp.json.fields.validation.CcpJsonCommonsFields;
 
 /**
  * Singleton {@code CcpBusiness} que processa cada documento retornado pelo {@code _mget}.
@@ -13,9 +14,6 @@ import com.ccp.business.CcpBusiness;
  * Lança {@code CcpErrorCrudMultiGetSearchFailed} se o documento contiver campo {@code error}.
  */
 class FunctionResponseHandlerToMget implements CcpBusiness{
-	enum JsonFieldNames implements CcpJsonFieldName{
-		error, _source, _index, _id
-	}
 	
 	static final FunctionResponseHandlerToMget INSTANCE = new FunctionResponseHandlerToMget();
 	
@@ -23,7 +21,7 @@ class FunctionResponseHandlerToMget implements CcpBusiness{
 
 	public CcpJsonRepresentation apply(CcpJsonRepresentation json) {
 		
-		CcpJsonRepresentation error = json.getInnerJson(JsonFieldNames.error);
+		CcpJsonRepresentation error = json.getInnerJson(CcpJsonCommonsFields.error);
 		boolean errorEmpty = error.isEmpty();
 
 		boolean hasError = false == errorEmpty;
@@ -33,15 +31,15 @@ class FunctionResponseHandlerToMget implements CcpBusiness{
 			throw ccpErrorCrudMultiGetSearchFailed;
 		}
 
-		CcpJsonRepresentation internalMap = json.getInnerJson(JsonFieldNames._source);
+		CcpJsonRepresentation internalMap = json.getInnerJson(CcpJsonCommonsFields._source);
 		
-		String _index = json.getAsString(JsonFieldNames._index);
-		String id = json.getAsString(JsonFieldNames._id);
+		String _index = json.getAsString(CcpJsonCommonsFields._index);
+		String id = json.getAsString(CcpJsonCommonsFields._id);
 		CcpJsonRepresentation put2 = internalMap
-				.put(JsonFieldNames._id, id);
+				.put(CcpJsonCommonsFields._id, id);
 
 				CcpJsonRepresentation put = put2
-				.put(JsonFieldNames._index, _index)
+				.put(CcpJsonCommonsFields._index, _index)
 				;
 		
 		return put;
