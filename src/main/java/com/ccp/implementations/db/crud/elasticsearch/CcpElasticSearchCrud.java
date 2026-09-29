@@ -4,7 +4,7 @@ import com.ccp.dependency.injection.CcpInstanceProvider;
 import com.ccp.especifications.db.crud.CcpCrud;
 
 /**
- * Provedor de DI que expõe {@code ElasticSearchCrud} como implementação de {@code CcpCrud}.
+ * DI provider that exposes {@code ElasticSearchCrud} as the {@code CcpCrud} implementation.
  */
 public class CcpElasticSearchCrud implements CcpInstanceProvider<CcpCrud>  {
 

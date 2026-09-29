@@ -9,9 +9,9 @@ import com.ccp.business.CcpBusiness;
 import com.ccp.json.fields.validation.CcpJsonCommonsFields;
 
 /**
- * Singleton {@code CcpBusiness} que processa cada documento retornado pelo {@code _mget}.
- * Extrai o campo {@code _source} e re-adiciona {@code _id} e {@code _index} ao JSON resultante.
- * Lança {@code CcpErrorCrudMultiGetSearchFailed} se o documento contiver campo {@code error}.
+ * Singleton {@code CcpBusiness} that processes each document returned by {@code _mget}.
+ * Extracts the {@code _source} field and adds {@code _id} and {@code _index} back to the resulting JSON.
+ * Throws {@code CcpErrorCrudMultiGetSearchFailed} if the document contains an {@code error} field.
  */
 class FunctionResponseHandlerToMget implements CcpBusiness{
 	
@@ -31,18 +31,18 @@ class FunctionResponseHandlerToMget implements CcpBusiness{
 			throw ccpErrorCrudMultiGetSearchFailed;
 		}
 
-		CcpJsonRepresentation internalMap = json.getInnerJson(CcpJsonCommonsFields._source);
-		
+		CcpJsonRepresentation source = json.getInnerJson(CcpJsonCommonsFields._source);
+
 		String _index = json.getAsString(CcpJsonCommonsFields._index);
 		String id = json.getAsString(CcpJsonCommonsFields._id);
-		CcpJsonRepresentation put2 = internalMap
+		CcpJsonRepresentation sourceWithId = source
 				.put(CcpJsonCommonsFields._id, id);
 
-				CcpJsonRepresentation put = put2
+				CcpJsonRepresentation sourceWithIdAndIndex = sourceWithId
 				.put(CcpJsonCommonsFields._index, _index)
 				;
-		
-		return put;
+
+		return sourceWithIdAndIndex;
 	}
 	
 }
