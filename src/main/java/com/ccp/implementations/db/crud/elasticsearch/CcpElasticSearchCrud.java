@@ -9,6 +9,10 @@ import com.ccp.especifications.db.crud.CcpCrud;
 public class CcpElasticSearchCrud implements CcpInstanceProvider<CcpCrud>  {
 
 
+	/**
+	 * Builds the Elasticsearch implementation of {@code CcpCrud}.
+	 * @return a new {@code ElasticSearchCrud}
+	 */
 	public CcpCrud getInstance() {
 		ElasticSearchCrud elasticSearchCrud = new ElasticSearchCrud();
 		return elasticSearchCrud;

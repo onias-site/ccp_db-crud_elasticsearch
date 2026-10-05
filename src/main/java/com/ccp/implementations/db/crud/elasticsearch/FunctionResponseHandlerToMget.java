@@ -15,10 +15,19 @@ import com.ccp.json.fields.validation.CcpJsonCommonsFields;
  */
 class FunctionResponseHandlerToMget implements CcpBusiness{
 	
+	/** The single instance. */
 	static final FunctionResponseHandlerToMget INSTANCE = new FunctionResponseHandlerToMget();
 	
+	/** Singleton; use {@link #INSTANCE}. */
 	private FunctionResponseHandlerToMget() {}
 
+	/**
+	 * Returns the {@code _source} of the document plus its {@code _id} and {@code _index}; a document not found yields only
+	 * {@code _id} and {@code _index}.
+	 * @param json a document of the {@code _mget} response
+	 * @return the record
+	 * @throws com.ccp.especifications.db.crud.CcpErrorCrudMultiGetSearchFailed when the document has an {@code error}
+	 */
 	public CcpJsonRepresentation apply(CcpJsonRepresentation json) {
 		
 		CcpJsonRepresentation error = json.getInnerJson(CcpJsonCommonsFields.error);

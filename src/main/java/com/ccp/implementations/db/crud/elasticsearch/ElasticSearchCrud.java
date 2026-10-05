@@ -24,17 +24,39 @@ import com.ccp.especifications.http.CcpHttpMethods;
 import com.ccp.especifications.http.CcpHttpResponseType;
 import com.ccp.process.CcpFunctionThrowException;
 import com.ccp.json.fields.validation.CcpJsonCommonsFields;
-import java.util.stream.Stream;/**
+import java.util.stream.Stream;
+
+/**
  * Main {@code CcpCrud} and {@code CcpUnionAllExecutor} implementation for Elasticsearch.
  * Provides read operations ({@code getOneById}, {@code exists}, {@code unionAll}),
  * write operations ({@code save} with upsert via a Painless script) and removal ({@code delete}).
  */
-
 class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
+	/** Fields of the Elasticsearch requests. */
 	enum JsonFieldNames implements CcpJsonFieldName{
-		upsert, params, source, script, lang, painless, docs
+		/** Document created when the update finds none. */
+		upsert,
+		/** Parameters of the update script. */
+		params,
+		/** Source of the update script. */
+		source,
+		/** The update script. */
+		script,
+		/** Language of the script. */
+		lang,
+		/** The Painless script language. */
+		painless,
+		/** Documents of a multi-get. */
+		docs
 	}
 
+	/**
+	 * Builds the {@code _mget} body with the index and id of every pair entity/JSON whose primary key is complete.
+	 * @param jsons the search parameters
+	 * @param entities the entities searched
+	 * @return the request body
+	 * @throws CcpErrorCrudMultiGetSearchUnfeasible when no pair has a complete primary key
+	 */
 	private CcpJsonRepresentation getRequestBodyToMultipleGet(Collection<CcpJsonRepresentation> jsons, CcpEntity... entities) {
 		
 		Set<CcpJsonRepresentation> docs = new LinkedHashSet<CcpJsonRepresentation>();
@@ -69,6 +91,12 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 	}
 	
 	
+	/**
+	 * Builds the {@code _mget} body with every id in every entity.
+	 * @param ids the document ids
+	 * @param entities the entities searched
+	 * @return the request body
+	 */
 	public CcpJsonRepresentation getRequestBodyToMultipleGet(Set<String> ids, CcpEntity... entities) {
 		List<CcpJsonRepresentation> indexAndIdDocs = new ArrayList<CcpJsonRepresentation>();
 		for (CcpEntity entity : entities) {
@@ -86,6 +114,13 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 		return requestBody;
 	}
 	
+	/**
+	 * Reads {@code /<entity>/_source/<id>}.
+	 * @param entityName the index name
+	 * @param id the document id
+	 * @return the document
+	 * @throws com.ccp.especifications.db.bulk.CcpErrorBulkEntityRecordNotFound on 404
+	 */
 	public CcpJsonRepresentation getOneById(String entityName, String id) {
 		String entityPath = "/" + entityName;
 		String sourcePathPrefix = entityPath + "/_source/";
@@ -101,6 +136,12 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 		return response;
 	}
 
+	/**
+	 * Checks the document with {@code HEAD /<entity>/_doc/<id>}.
+	 * @param entityName the index name
+	 * @param id the document id
+	 * @return {@code true} on 200, {@code false} on 404
+	 */
 	public boolean exists(String entityName, String id) {
 		String entityPath = "/" + entityName;
 		String docPathPrefix = entityPath + "/_doc/";
@@ -118,6 +159,15 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 		return exists;
 	}
 
+	/**
+	 * Creates or merges the document with {@code POST /<entity>/_update/<id>}: a Painless script puts every field of the
+	 * JSON into the stored document, and {@code upsert} creates it when absent. A 409 (version conflict) is retried after
+	 * one second, with no retry limit.
+	 * @param entityName the index name
+	 * @param json the document data
+	 * @param id the document id
+	 * @return the response, with the status recorded in {@code ElasticSearchHttpStatus}
+	 */
 	public CcpJsonRepresentation save(String entityName, CcpJsonRepresentation json, String id) {
 		String entityPath = "/" + entityName;
 		String updatePathPrefix = entityPath + "/_update/";
@@ -190,6 +240,13 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 		return statusSaysItWasInserted;
 	}
 
+	/**
+	 * Waits one second and saves again.
+	 * @param entityName the index name
+	 * @param json the document data
+	 * @param id the document id
+	 * @return the response of the new attempt
+	 */
 	private CcpJsonRepresentation retrySave(String entityName, CcpJsonRepresentation json, String id) {
 		CcpTimeDecorator ccpTimeDecorator = new CcpTimeDecorator();
 		ccpTimeDecorator.sleep(1000);
@@ -215,6 +272,12 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 		return found;
 	}
 	
+	/**
+	 * Searches every pair entity/JSON in one {@code _mget}.
+	 * @param values the search parameters
+	 * @param entities the entities searched
+	 * @return the condensed result
+	 */
 	public CcpSelectUnionAll unionAll(Collection<CcpJsonRepresentation> values, CcpEntity... entities) {
 		CcpJsonRepresentation requestBody = this.getRequestBodyToMultipleGet(values, entities);
 		int valuesSize = values.size();
@@ -224,6 +287,14 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 	}
 
 
+	/**
+	 * Runs the {@code _mget} and condenses the documents found.
+	 * @param requestBody the request body
+	 * @param searchParameters the search parameters
+	 * @param entities the entities searched
+	 * @return the condensed result
+	 * @throws com.ccp.especifications.db.crud.CcpErrorCrudMultiGetSearchFailed when a document of the response has an error
+	 */
 	private CcpSelectUnionAll unionAll(CcpJsonRepresentation requestBody, CcpJsonRepresentation[] searchParameters, CcpEntity... entities) {
 		CcpDbRequester dbUtils = CcpDependencyInjection.getDependency(CcpDbRequester.class);
 		CcpJsonRepresentation response = dbUtils.executeHttpRequest("getResponseToMultipleGet", "/_mget", CcpHttpMethods.POST, 200, requestBody, CcpHttpResponseType.singleRecord);
@@ -235,6 +306,10 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 		return ccpSelectUnionAll;
 	}
 
+	/**
+	 * This class is its own union-all executor.
+	 * @return this instance
+	 */
 	public CcpUnionAllExecutor getUnionAllExecutor() {
 		return this;
 	}
