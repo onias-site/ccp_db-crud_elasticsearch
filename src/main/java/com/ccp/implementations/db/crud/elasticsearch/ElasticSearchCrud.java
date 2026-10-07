@@ -161,17 +161,37 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 
 	/**
 	 * Creates or merges the document with {@code POST /<entity>/_update/<id>}: a Painless script puts every field of the
-	 * JSON into the stored document, and {@code upsert} creates it when absent. A 409 (version conflict) is retried after
-	 * one second, with no retry limit.
+	 * JSON into the stored document, and {@code upsert} creates it when absent. A version conflict is first retried by
+	 * Elasticsearch itself ({@code retry_on_conflict}); a 409 that still comes back is retried here after one second, up to
+	 * {@value #MAX_SAVE_ATTEMPTS} attempts in all, and then {@link CcpErrorElasticSearchVersionConflict} is thrown. Until
+	 * 2026-10-06 there was no limit: a persistent conflict became an endless recursion (and, in the end, a
+	 * {@code StackOverflowError}).
 	 * @param entityName the index name
 	 * @param json the document data
 	 * @param id the document id
 	 * @return the response, with the status recorded in {@code ElasticSearchHttpStatus}
+	 * @throws CcpErrorElasticSearchVersionConflict when the conflict persists after every attempt
 	 */
 	public CcpJsonRepresentation save(String entityName, CcpJsonRepresentation json, String id) {
+		CcpJsonRepresentation response = this.save(entityName, json, id, 1);
+		return response;
+	}
+
+	/** Attempts of {@code save} when Elasticsearch keeps answering 409, counting the first one. */
+	static final int MAX_SAVE_ATTEMPTS = 3;
+
+	/**
+	 * Runs one attempt of {@link #save(String, CcpJsonRepresentation, String)}.
+	 * @param entityName the index name
+	 * @param json the document data
+	 * @param id the document id
+	 * @param attempt the number of this attempt, starting at 1
+	 * @return the response, with the status recorded in {@code ElasticSearchHttpStatus}
+	 */
+	private CcpJsonRepresentation save(String entityName, CcpJsonRepresentation json, String id, int attempt) {
 		String entityPath = "/" + entityName;
 		String updatePathPrefix = entityPath + "/_update/";
-		String path = updatePathPrefix + id;
+		String path = updatePathPrefix + id + "?retry_on_conflict=" + MAX_SAVE_ATTEMPTS;
 		String painlessName = JsonFieldNames.painless.name();
 		CcpJsonRepresentation scriptWithLang = CcpOtherConstants.EMPTY_JSON
 				.addToItem(JsonFieldNames.script, JsonFieldNames.lang, painlessName);
@@ -184,7 +204,7 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 				.put(JsonFieldNames.upsert, json)
 				;
 				CcpJsonRepresentation handlersFor409 = CcpOtherConstants.EMPTY_JSON
-				.addJsonTransformer(409, values -> this.retrySave(entityName, json, id));
+				.addJsonTransformer(409, values -> this.retrySave(entityName, json, id, attempt));
 				CcpJsonRepresentation handlersFor409And201 = handlersFor409
 				.addJsonTransformer(201,  ElasticSearchHttpStatus.CREATED);
 
@@ -241,17 +261,41 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 	}
 
 	/**
-	 * Waits one second and saves again.
+	 * Waits one second and saves again, unless every attempt was already used.
 	 * @param entityName the index name
 	 * @param json the document data
 	 * @param id the document id
+	 * @param attempt the number of the attempt that got the 409
 	 * @return the response of the new attempt
+	 * @throws CcpErrorElasticSearchVersionConflict when {@code attempt} was the last one
 	 */
-	private CcpJsonRepresentation retrySave(String entityName, CcpJsonRepresentation json, String id) {
+	private CcpJsonRepresentation retrySave(String entityName, CcpJsonRepresentation json, String id, int attempt) {
+		boolean noAttemptLeft = attempt >= MAX_SAVE_ATTEMPTS;
+
+		if(noAttemptLeft) {
+			CcpErrorElasticSearchVersionConflict versionConflict = new CcpErrorElasticSearchVersionConflict(entityName, id, attempt);
+			throw versionConflict;
+		}
+
 		CcpTimeDecorator ccpTimeDecorator = new CcpTimeDecorator();
 		ccpTimeDecorator.sleep(1000);
-		CcpJsonRepresentation saveResponse = this.save(entityName, json, id);
+		int nextAttempt = attempt + 1;
+		CcpJsonRepresentation saveResponse = this.save(entityName, json, id, nextAttempt);
 		return saveResponse;
+	}
+
+	/** Raised when Elasticsearch keeps answering 409 (version conflict) to every attempt of a save. */
+	@SuppressWarnings("serial")
+	static class CcpErrorElasticSearchVersionConflict extends RuntimeException {
+		/**
+		 * Builds the error naming the document.
+		 * @param entityName the index name
+		 * @param id the document id
+		 * @param attempts the attempts made
+		 */
+		private CcpErrorElasticSearchVersionConflict(String entityName, String id, int attempts) {
+			super("Version conflict saving the document " + id + " of " + entityName + " after " + attempts + " attempts");
+		}
 	}
 
 	/**
