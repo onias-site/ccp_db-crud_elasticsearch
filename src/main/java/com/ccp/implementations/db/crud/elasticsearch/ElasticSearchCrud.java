@@ -32,6 +32,11 @@ import java.util.stream.Stream;
  * write operations ({@code save} with upsert via a Painless script) and removal ({@code delete}).
  */
 class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
+	/** The single instance: the class keeps no state. */
+	public final static ElasticSearchCrud INSTANCE = new ElasticSearchCrud();
+
+	private ElasticSearchCrud() {}
+
 	/** Fields of the Elasticsearch requests. */
 	enum JsonFieldNames implements CcpJsonFieldName{
 		/** Document created when the update finds none. */
