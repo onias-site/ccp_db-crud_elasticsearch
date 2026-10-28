@@ -102,7 +102,7 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 	 * @param entities the entities searched
 	 * @return the request body
 	 */
-	public CcpJsonRepresentation getRequestBodyToMultipleGet(Set<String> ids, CcpEntity... entities) {
+	public CcpJsonRepresentation getRequestBodyToMultipleGetByIds(Collection<String> ids, CcpEntity... entities) {
 		List<CcpJsonRepresentation> indexAndIdDocs = new ArrayList<CcpJsonRepresentation>();
 		for (CcpEntity entity : entities) {
 			CcpEntityMetaData entityDetails = entity.getEntityMetaData();
@@ -332,7 +332,20 @@ class ElasticSearchCrud implements CcpCrud, CcpUnionAllExecutor {
 		int valuesSize = values.size();
 		CcpJsonRepresentation[] searchParameters = values.toArray(new CcpJsonRepresentation[valuesSize]);
 		CcpSelectUnionAll ccpSelectUnionAll = this.unionAll(requestBody, searchParameters, entities);
-		return ccpSelectUnionAll;   
+		return ccpSelectUnionAll;
+	}
+
+	/**
+	 * Searches every id in every entity in one {@code _mget}.
+	 * @param ids the ids of the records
+	 * @param entities the entities searched
+	 * @return the condensed result
+	 */
+	public CcpSelectUnionAll unionAllByIds(Collection<String> ids, CcpEntity... entities) {
+		CcpJsonRepresentation requestBody = this.getRequestBodyToMultipleGetByIds(ids, entities);
+		CcpJsonRepresentation[] noSearchParameters = new CcpJsonRepresentation[0];
+		CcpSelectUnionAll ccpSelectUnionAll = this.unionAll(requestBody, noSearchParameters, entities);
+		return ccpSelectUnionAll;
 	}
 
 
